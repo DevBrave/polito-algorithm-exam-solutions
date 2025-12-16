@@ -1,5 +1,7 @@
 .idea/
-cmake-build-*/
+*/cmake-build-*/
+*/cmake-build-*
+CMakeLists.txt
 *.o
 *.out
 *.exe
