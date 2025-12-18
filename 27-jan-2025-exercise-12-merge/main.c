@@ -41,9 +41,11 @@ list_a* newA(void);
 list_b* newB(char* str);
 list_b* merge(list_a* head);
 void print_all_b(list_b* head);
-list_b *sort_b_list(list_b *head);
-void sorted_insert(list_b **sorted, list_b *node);
-
+list_b* sort_b_list(list_b* head);
+void sorted_insert(list_b** sorted, list_b* node);
+list_b* remove_duplicates(list_b* head);
+void free_b(list_b *head);
+void free_a(list_a *head);
 int main(void)
 {
      // initialize
@@ -53,7 +55,7 @@ int main(void)
      b1->next = newB("banana");
 
      // B list for A2: apricot -> cherry
-     list_b* b2 = newB("apricot");
+     list_b* b2 = newB("cherry");
      b2->next = newB("cherry");
 
      // B list for A3: banana -> date
@@ -74,8 +76,15 @@ int main(void)
 
      // head of main list
      headA = a1;
+     printf("Sorted list\n");
+     // sort the list
+     list_b *last_b = merge(headA);
+     print_all_b(last_b);
 
-     merge(headA);
+     // let's free them all
+
+     free_b(last_b);
+     free_a(headA);
 }
 
 list_b* newB(char* str)
@@ -110,20 +119,22 @@ list_a* newA(void)
 list_b* merge(list_a* head)
 {
      // change the last *next address of 'b' node in each 'a' node is the head of next b_head of node 'a'
-     list_a *firstA = head;
-     list_b *sorted;
+     list_a* firstA = head;
+     list_b* sorted;
      // extract
      while (head != NULL && head->next != NULL)
      {
-          list_b *currB = head->b_head;
+          list_b* currB = head->b_head;
 
-          if (currB == NULL) {
+          if (currB == NULL)
+          {
                head = head->next;
                continue;
           }
 
           // find last B node
-          while (currB->next != NULL) {
+          while (currB->next != NULL)
+          {
                currB = currB->next;
           }
 
@@ -133,19 +144,10 @@ list_b* merge(list_a* head)
           head = head->next;
      }
 
-
-     // print all b nodes
-     printf("Original List");
-
-     print_all_b(firstA->b_head);
-
-     printf("Sorted list\n");
-     // sort the list
      list_b *sorted_list = sort_b_list(firstA->b_head);
-     print_all_b(sorted_list);
+     return remove_duplicates(sorted_list);
 
 }
-
 
 
 void print_all_b(list_b* head)
@@ -153,20 +155,20 @@ void print_all_b(list_b* head)
      int i = 0;
      while (head != NULL)
      {
-          printf("B%d = %s\n", i,head->string);
+          printf("B%d = %s\n", i, head->string);
           head = head->next;
           i++;
      }
 }
 
-list_b *sort_b_list(list_b *head)
+list_b* sort_b_list(list_b* head)
 {
-     list_b *sorted = NULL;
+     list_b* sorted = NULL;
 
      while (head != NULL)
      {
-          list_b *next = head->next;   // save next node
-          head->next = NULL;           // detach current node
+          list_b* next = head->next; // save next node
+          head->next = NULL; // detach current node
 
           sorted_insert(&sorted, head);
 
@@ -176,11 +178,11 @@ list_b *sort_b_list(list_b *head)
      return sorted;
 }
 
-void sorted_insert(list_b **sorted, list_b *node)
+void sorted_insert(list_b** sorted, list_b* node)
 {
      // insert at head
      if (*sorted == NULL ||
-         strcmp(node->string, (*sorted)->string) <= 0)
+          strcmp(node->string, (*sorted)->string) <= 0)
      {
           node->next = *sorted;
           *sorted = node;
@@ -188,13 +190,57 @@ void sorted_insert(list_b **sorted, list_b *node)
      }
 
      // walk list to find position
-     list_b *curr = *sorted;
+     list_b* curr = *sorted;
      while (curr->next != NULL &&
-            strcmp(node->string, curr->next->string) > 0)
+          strcmp(node->string, curr->next->string) > 0)
      {
           curr = curr->next;
      }
 
      node->next = curr->next;
      curr->next = node;
+}
+
+list_b* remove_duplicates(list_b* head)
+{
+     list_b* curr = head;
+     while (curr != NULL && curr->next != NULL)
+          if (strcmp(curr->string, curr->next->string) == 0)
+          {
+               list_b* dup = curr->next;
+               curr->next = dup->next;
+
+               free(dup->string); // strdup() memory
+               free(dup); // node
+          }
+          else
+          {
+               curr = curr->next;
+          }
+
+     return head; // because we will never delete the head and we just free the pointer of duplicated nodes between head and tail
+}
+
+
+void free_a(list_a *head)
+{
+     // because we still have multiple B nodes in multiple A nodes, we have to free all B node first
+     // free a
+     while (head != NULL)
+     {
+          list_a *next = head->next;
+          free(head);
+          head = next;
+     }
+}
+
+void free_b(list_b *head)
+{
+     while (head != NULL)
+     {
+          list_b *next = head->next;
+          free(head->string);
+          free(head);
+          head = next;
+     }
 }
